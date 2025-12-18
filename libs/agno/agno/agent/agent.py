@@ -2306,7 +2306,10 @@ class Agent:
         cultural_knowledge_task = None
 
         # 1. Read or create session. Reads from the database if provided.
-        agent_session = await self._aread_or_create_session(session_id=session_id, user_id=user_id)
+        if self._has_async_db():
+            agent_session = await self._aread_or_create_session(session_id=session_id, user_id=user_id)
+        else:
+            agent_session = self._read_or_create_session(session_id=session_id, user_id=user_id)
 
         # Set up retry logic
         num_attempts = self.retries + 1
@@ -6492,7 +6495,7 @@ class Agent:
         if self.db is not None and self.team_id is None and self.workflow_id is None:
             log_debug(f"Reading AgentSession: {session_id}")
 
-            agent_session = cast(AgentSession, await self._read_session(session_id=session_id))
+            agent_session = cast(AgentSession, self._read_session(session_id=session_id))
 
         if agent_session is None:
             # Creating new session if none found
